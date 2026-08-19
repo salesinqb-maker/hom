@@ -84,11 +84,9 @@
   table.mx thead th.grHP { background:rgba(212,169,65,.16); color:var(--gold); }
   table.mx thead th.grHC { background:rgba(91,141,184,.16); color:#7fb0d8; }
   table.mx td:first-child, table.mx th:first-child { position:sticky; left:0; background:var(--card); z-index:3; }
+  table.mx td.nm { color:var(--txt); font-weight:600; white-space:nowrap; min-width:130px; }
   table.mx td.pts { font-variant-numeric:tabular-nums; text-align:right; color:var(--gold); }
   table.mx td.chs { font-variant-numeric:tabular-nums; text-align:right; color:#7fb0d8; }
-  table.mx th.ptsH { color:var(--gold); }
-  table.mx th.chsH { color:#7fb0d8; }
-  table.mx td.g { color:var(--gold); font-weight:700; width:30px; }
   table.mx tr:hover td { background:var(--card2); }
   table.mx tr:hover td:first-child { background:var(--card2); }
   .gcard { display:flex; justify-content:space-between; align-items:center; background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin-bottom:8px; }
@@ -221,9 +219,9 @@ document.getElementById('cattab').innerHTML = `<table class="cat"><thead>${th}</
 // --- weekly matrix: 2wk roster x 6 weeks (points gold / chests blue) ---
 const mw = D.matrix[0].weeks.map(w => w.w);
 const mxHead = `<thead><tr><th></th><th class="grHP" colspan="${mw.length}">Points</th><th class="grHC" colspan="${mw.length}">Chest Count (valid)</th></tr>` +
-  `<tr><th>G / Name</th>${mw.map(w=>`<th class="ptsH">${w}</th>`).join('')}${mw.map(w=>`<th class="chsH">${w}</th>`).join('')}</tr></thead>`;
+  `<tr><th>Name</th>${mw.map(w=>`<th class="ptsH">${w}</th>`).join('')}${mw.map(w=>`<th class="chsH">${w}</th>`).join('')}</tr></thead>`;
 const mxBody = D.matrix.map(r =>
-  `<tr><td class="g">${r.g}</td>${r.weeks.map(w=>`<td class="pts">${w.pts?fmt(w.pts):'·'}</td>`).join('')}${r.weeks.map(w=>`<td class="chs">${w.chests?fmt(w.chests):'·'}</td>`).join('')}</tr>`).join('');
+  `<tr><td class="nm">${r.name}</td>${r.weeks.map(w=>`<td class="pts">${w.pts?fmt(w.pts):'·'}</td>`).join('')}${r.weeks.map(w=>`<td class="chs">${w.chests?fmt(w.chests):'·'}</td>`).join('')}</tr>`).join('');
 document.getElementById('mx').innerHTML = mxHead + `<tbody>${mxBody}</tbody>`;
 
 // --- chest types ---
