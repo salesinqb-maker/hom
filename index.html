@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HOM Clan Tracker</title>
+<style>
+  :root {
+    --bg:#0d0f14; --card:#161a22; --card2:#1c212c; --line:#262d3a;
+    --gold:#d4a941; --gold2:#b8860b; --blue:#5b8db8; --txt:#e8e6e1; --mut:#8b93a3;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Liberation Sans',Helvetica,Arial,sans-serif; padding:28px 20px 60px; }
+  .wrap { max-width:980px; margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:22px; flex-wrap:wrap; gap:10px; }
+  h1 { font-size:26px; letter-spacing:.5px; }
+  h1 em { color:var(--gold); font-style:normal; }
+  .meta { color:var(--mut); font-size:12px; text-align:right; line-height:1.5; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:26px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card .k { color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .card .v { font-size:24px; font-weight:700; color:var(--gold); }
+  .card .s { color:var(--mut); font-size:11px; margin-top:4px; }
+  .card .s.up { color:#7fb069; }
+  .card .s.down { color:#d16666; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold2); margin:26px 0 12px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .grid2{ grid-template-columns:1fr; } }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .row { display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:13px; }
+  .row .rank { width:22px; color:var(--mut); font-weight:700; text-align:right; }
+  .row .name { width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar { flex:1; height:16px; background:var(--card2); border-radius:4px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--gold2),var(--gold)); border-radius:4px; }
+  .row .val { width:96px; text-align:right; color:var(--mut); font-size:12px; white-space:nowrap; }
+  .row .val b { color:var(--txt); }
+  /* weekly chart: bars + chest line */
+  .chart { position:relative; }
+  .weekly { display:flex; align-items:flex-end; gap:8px; height:150px; padding:24px 4px 0; }
+  .weekly .col { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; gap:6px; }
+  .weekly .col i { width:100%; max-width:34px; background:linear-gradient(180deg,var(--gold),var(--gold2)); border-radius:3px 3px 0 0; min-height:2px; }
+  .weekly .col b { font-size:10px; color:var(--txt); }
+  .weekly .col span { font-size:10px; color:var(--mut); }
+  .line-svg { width:100%; height:30px; display:block; margin-top:2px; }
+  .legend { display:flex; gap:16px; margin-bottom:6px; font-size:11px; color:var(--mut); }
+  .legend i { display:inline-block; width:12px; height:3px; vertical-align:middle; margin-right:5px; }
+  /* per-category table */
+  .cattab { overflow-x:auto; }
+  table.cat { width:100%; border-collapse:collapse; font-size:12px; min-width:640px; }
+  table.cat th { background:var(--card2); color:var(--gold); text-transform:uppercase; font-size:11px; letter-spacing:1px; padding:8px; text-align:left; border-bottom:1px solid var(--line); }
+  table.cat td { padding:6px 8px; border-bottom:1px solid var(--line); color:var(--mut); }
+  table.cat td b { color:var(--txt); font-weight:600; }
+  table.cat td .n { color:var(--gold); font-weight:700; }
+  table.cat tr:hover td { background:var(--card2); }
+  /* leaderboard table */
+  .lb-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .lb-head input { background:var(--card2); border:1px solid var(--line); border-radius:8px; color:var(--txt); padding:7px 12px; font-size:13px; width:100%; max-width:240px; outline:none; }
+  .lb-head input:focus { border-color:var(--gold2); }
+  .lb-head .cnt { color:var(--mut); font-size:11px; }
+  .lb-scroll { overflow-y:auto; max-height:430px; border:1px solid var(--line); border-radius:8px; -webkit-overflow-scrolling:touch; }
+  table.lb { width:100%; border-collapse:collapse; font-size:13px; }
+  table.lb thead th { position:sticky; top:0; background:var(--card); z-index:1; }
+  table.lb th { text-align:left; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:1px; padding:8px; border-bottom:1px solid var(--line); }
+  table.lb th.num, table.lb td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  table.lb td { padding:7px 8px; border-bottom:1px solid var(--line); }
+  table.lb tr:hover td { background:var(--card2); }
+  table.lb td.rank { color:var(--mut); font-weight:700; width:34px; }
+  table.lb td.pts { color:var(--gold); font-weight:700; }
+  table.lb td.ch { color:var(--txt); }
+  .hidden { display:none; }
+  @media (max-width:520px){
+    body { padding:18px 10px 50px; }
+    .lb-scroll { max-height:340px; }
+    .lb-head input { max-width:none; }
+    .weekly .col i { max-width:24px; }
+  }
+  .gcard { display:flex; justify-content:space-between; align-items:center; background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin-bottom:8px; }
+  .gcard .g { font-weight:700; font-size:15px; }
+  .gcard .n { font-size:20px; font-weight:700; color:var(--gold); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { background:var(--card2); border:1px solid var(--line); border-radius:14px; padding:3px 10px; font-size:11px; color:var(--mut); }
+  footer { margin-top:30px; color:var(--mut); font-size:11px; text-align:center; line-height:1.6; }
+  .tag { display:inline-block; background:var(--card2); border:1px solid var(--line); border-radius:20px; padding:2px 10px; font-size:11px; color:var(--gold); margin-right:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>HOM <em>·</em> Clan Tracker</h1>
+    <div class="meta">Data through <b id="gen"></b> · Week <b id="wk"></b><br>current week focus</div>
+  </header>
+
+  <div class="cards">
+    <div class="card"><div class="k">Points — this week</div><div class="v" id="cPw"></div><div class="s" id="sPw"></div></div>
+    <div class="card"><div class="k">Chests — this week</div><div class="v" id="cCw"></div><div class="s">valid entries</div></div>
+    <div class="card"><div class="k">Active — this week</div><div class="v" id="cA"></div><div class="s">players in the log</div></div>
+    <div class="card"><div class="k">Forecast — this week</div><div class="v" id="cPrev"></div><div class="s" id="sPrev"></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Weekly Points — last 8 weeks</h2>
+      <div class="weekly" id="perfP"></div>
+    </div>
+    <div class="panel">
+      <h2>Weekly Chests — last 8 weeks</h2>
+      <div class="weekly" id="perfC"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <h2>This Week — per Category Top 5</h2>
+    <div class="cattab" id="cattab"></div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <h2>Leaderboard — 2-week roster · current week points</h2>
+    <div class="lb-head">
+      <input id="lbSearch" type="text" placeholder="🔍 Search player…" oninput="filterLB(this.value)">
+      <span class="cnt" id="lbCnt"></span>
+    </div>
+    <div class="lb-scroll"><table class="lb" id="lb"></table></div>
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <div class="panel">
+      <h2>Chest Types — this week</h2>
+      <div id="types"></div>
+    </div>
+    <div class="panel">
+      <h2>G Levels — active roster</h2>
+      <div id="gdist"></div>
+      <h2 style="margin-top:18px">Unknown (XXX) — list</h2>
+      <div class="chips" id="unknowns"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="tag">8-week trend</span><span class="tag">2-week roster</span><span class="tag">weekly refresh</span><br>
+    HOM Clan Tracker · light static build · no database
+  </footer>
+</div>
+<script>
+const D = {"generated": "2026-08-18", "last_week": 34, "stats": {"points": 378430, "chests": 2151, "active": 89, "prev_points": 1103340, "forecast": 1324505, "fdelta": 20, "elapsed": 2}, "perf": [{"w": "W27", "points": 629430, "chests": 4308}, {"w": "W28", "points": 748260, "chests": 4394}, {"w": "W29", "points": 831200, "chests": 5070}, {"w": "W30", "points": 826490, "chests": 4958}, {"w": "W31", "points": 606410, "chests": 3620}, {"w": "W32", "points": 844430, "chests": 4858}, {"w": "W33", "points": 1103340, "chests": 6304}, {"w": "W34", "points": 378430, "chests": 2151}], "cat_top": {"Common": [{"name": "Sandman", "n": 38}, {"name": "Rose", "n": 35}, {"name": "Galalotilas", "n": 29}, {"name": "KGB Sk", "n": 26}, {"name": "Daigoro II", "n": 26}], "Citadel": [{"name": "CelinaCast", "n": 107}, {"name": "IVIM", "n": 92}, {"name": "ANARCHY", "n": 67}, {"name": "Sandman", "n": 45}, {"name": "Recondito", "n": 38}], "Rare": [{"name": "KGB Sk", "n": 42}, {"name": "Sandman", "n": 33}, {"name": "Patrick Marcellus", "n": 14}, {"name": "Fagon", "n": 13}, {"name": "Crazy Nomad", "n": 10}], "Epic": [{"name": "Juicey", "n": 63}, {"name": "Kaanef", "n": 15}, {"name": "Mini KER", "n": 15}, {"name": "Phillip Marcellus", "n": 12}, {"name": "Patrick Marcellus", "n": 10}], "Heroic": [{"name": "Maebrixis", "n": 12}, {"name": "Patrick Marcellus", "n": 4}, {"name": "Phillip Marcellus", "n": 2}, {"name": "Fagon", "n": 1}, {"name": "Mini KER", "n": 1}]}, "leaderboard": [{"name": "Juicey", "chests": 74, "points": 49520}, {"name": "CelinaCast", "chests": 121, "points": 26130}, {"name": "IVIM", "chests": 99, "points": 14530}, {"name": "Mat", "chests": 65, "points": 13490}, {"name": "Patrick Marcellus", "chests": 84, "points": 12150}, {"name": "KGB Sk", "chests": 94, "points": 12110}, {"name": "Sandman", "chests": 116, "points": 10470}, {"name": "Recondito", "chests": 51, "points": 9420}, {"name": "Fagon", "chests": 61, "points": 9090}, {"name": "ANARCHY", "chests": 68, "points": 9070}, {"name": "Mini KER", "chests": 32, "points": 8050}, {"name": "Casper Egypt", "chests": 31, "points": 7190}, {"name": "Maximus", "chests": 40, "points": 7170}, {"name": "Crazy Jnr", "chests": 31, "points": 6200}, {"name": "Maebrixis", "chests": 38, "points": 6100}, {"name": "Crazy Nomad", "chests": 20, "points": 5940}, {"name": "Galalotilas", "chests": 46, "points": 5720}, {"name": "Kaanef", "chests": 38, "points": 5670}, {"name": "Ayar", "chests": 26, "points": 5630}, {"name": "Phillip Marcellus", "chests": 44, "points": 5600}, {"name": "Rose", "chests": 35, "points": 5480}, {"name": "luch", "chests": 27, "points": 5250}, {"name": "TRONCHAPINOS", "chests": 23, "points": 5230}, {"name": "ModToons", "chests": 38, "points": 4940}, {"name": "Apolo", "chests": 24, "points": 4730}, {"name": "Sgt Jonatas", "chests": 23, "points": 4640}, {"name": "TheOLD13", "chests": 28, "points": 4620}, {"name": "Tenaya", "chests": 29, "points": 4110}, {"name": "Cu Chulainn", "chests": 16, "points": 4100}, {"name": "lucky", "chests": 20, "points": 3940}, {"name": "Felifin", "chests": 22, "points": 3910}, {"name": "shinek", "chests": 25, "points": 3760}, {"name": "Marilune", "chests": 25, "points": 3740}, {"name": "Arkenstone", "chests": 22, "points": 3680}, {"name": "Vengeance", "chests": 28, "points": 3320}, {"name": "Darkbrand", "chests": 28, "points": 3240}, {"name": "Tygohn", "chests": 12, "points": 3210}, {"name": "DikefalosAetos", "chests": 17, "points": 3210}, {"name": "Moga", "chests": 21, "points": 3200}, {"name": "Liroseyl", "chests": 20, "points": 3200}, {"name": "Finanan", "chests": 14, "points": 3190}, {"name": "Tygranaya", "chests": 14, "points": 3090}, {"name": "Anfiren", "chests": 20, "points": 3040}, {"name": "Daniela", "chests": 17, "points": 2830}, {"name": "le vautour", "chests": 13, "points": 2720}, {"name": "Outred Sword", "chests": 21, "points": 2610}, {"name": "Sarek", "chests": 22, "points": 2460}, {"name": "Fobur", "chests": 11, "points": 2400}, {"name": "Kagamand", "chests": 18, "points": 2390}, {"name": "Sir Bacon", "chests": 10, "points": 2330}, {"name": "Quintus Marcellus", "chests": 25, "points": 2260}, {"name": "YUSUF", "chests": 8, "points": 2150}, {"name": "Daigoro II", "chests": 26, "points": 2080}, {"name": "Teramar", "chests": 13, "points": 2030}, {"name": "Coifyn", "chests": 10, "points": 1980}, {"name": "Eduardo el Confesor", "chests": 16, "points": 1920}, {"name": "Paulixm", "chests": 13, "points": 1910}, {"name": "KurtCobain", "chests": 24, "points": 1830}, {"name": "Annika", "chests": 15, "points": 1570}, {"name": "Xenia del Bruc", "chests": 18, "points": 1560}, {"name": "Nicole", "chests": 17, "points": 1470}, {"name": "Zeki II", "chests": 7, "points": 1440}, {"name": "Rainn", "chests": 8, "points": 1280}, {"name": "Sheeba", "chests": 8, "points": 1280}, {"name": "Avalon", "chests": 8, "points": 1280}, {"name": "HughHefner", "chests": 8, "points": 1270}, {"name": "Lampiao", "chests": 6, "points": 1140}, {"name": "fadel", "chests": 4, "points": 1000}, {"name": "Ragnarcross", "chests": 6, "points": 960}, {"name": "Mukelv", "chests": 15, "points": 940}, {"name": "Orcbolg", "chests": 6, "points": 930}, {"name": "SHEI", "chests": 4, "points": 730}, {"name": "Balladolmeena", "chests": 4, "points": 640}, {"name": "Amjad Naim", "chests": 6, "points": 640}, {"name": "C\u00fa Chulainn", "chests": 4, "points": 640}, {"name": "Nacho Libre", "chests": 8, "points": 640}, {"name": "Ainz Ooal Gown", "chests": 4, "points": 560}, {"name": "Shadowsong", "chests": 3, "points": 480}, {"name": "Chest Counter", "chests": 3, "points": 480}, {"name": "Aquiles VII", "chests": 3, "points": 480}, {"name": "OLITRIUMPH", "chests": 3, "points": 480}, {"name": "Winter", "chests": 3, "points": 480}, {"name": "ProbablyDrunk", "chests": 3, "points": 480}, {"name": "ZigZag", "chests": 4, "points": 480}, {"name": "Adri Blade", "chests": 5, "points": 400}, {"name": "LOTUS", "chests": 2, "points": 320}, {"name": "L\u00e1mhfhada", "chests": 7, "points": 280}, {"name": "Kalabar", "chests": 1, "points": 80}, {"name": "Luchrinel", "chests": 1, "points": 40}], "types": [{"t": "Common", "n": 897}, {"t": "Citadel", "n": 703}, {"t": "Rare", "n": 268}, {"t": "Epic", "n": 259}, {"t": "Heroic", "n": 24}], "g_dist": [{"g": "9", "n": 3}, {"g": "8", "n": 11}, {"g": "7", "n": 45}, {"g": "6", "n": 9}, {"g": "Unknown", "n": 31}], "unknowns": ["Adri Blade", "Apolo", "Aquiles VII", "Ayar", "Casper Egypt", "Coifyn", "C\u00fa Chulainn", "Dagonet", "EmTheSassyTwat", "Joseph", "KGB Sk", "Kagamand", "Kalabar", "Killswitch", "Lampiao", "Lampi\u00e3o", "Luchrinel", "L\u00e1mhfhada", "Mukelv", "Nicole", "OLITRIUMPH", "Quintus Marcellus", "Ragnarcross", "Recondito", "SHEI", "Sir Bacon", "Vengeance", "ZigZag", "juicebox", "malik", "shinek"]};
+const fmt = n => n.toLocaleString('en-US');
+document.getElementById('gen').textContent = D.generated;
+document.getElementById('wk').textContent = D.last_week;
+document.getElementById('cPw').textContent = fmt(D.stats.points);
+document.getElementById('cCw').textContent = fmt(D.stats.chests);
+document.getElementById('cA').textContent = D.stats.active;
+document.getElementById('sPw').textContent = `${D.stats.elapsed} day(s) of data`;
+document.getElementById('cPrev').textContent = fmt(D.stats.forecast);
+const fd = D.stats.fdelta;
+document.getElementById('sPrev').innerHTML = `${fd >= 0 ? '▲ +' + fd + '%' : '▼ ' + fd + '%'} vs last week (${fmt(D.stats.prev_points)})`;
+document.getElementById('sPrev').className = 's ' + (fd >= 0 ? 'up' : 'down');
+
+// --- weekly charts (separate): points bars + chests bars ---
+const pm = Math.max(...D.perf.map(p=>p.points));
+const cmc = Math.max(...D.perf.map(p=>p.chests));
+function weeklyBars(el, key, max, color, labelFmt) {
+  el.innerHTML = D.perf.map(p=>
+    `<div class="col"><b>${labelFmt(p[key])}</b><i style="height:${Math.round(p[key]/max*100)}%;background:${color}"></i><span>${p.w}</span></div>`).join('');
+}
+weeklyBars(document.getElementById('perfP'), 'points', pm, 'linear-gradient(180deg,var(--gold),var(--gold2))', v=>fmt(v/1000)+'k');
+weeklyBars(document.getElementById('perfC'), 'chests', cmc, 'linear-gradient(180deg,#5b8db8,#3f6a92)', v=>fmt(v));
+
+// --- leaderboard table: full roster + live search ---
+document.getElementById('lb').innerHTML =
+  `<thead><tr><th>#</th><th>Name</th><th class="num">Points</th><th class="num">Chests</th></tr></thead><tbody>` +
+  D.leaderboard.map((r,i)=>
+    `<tr data-name="${r.name.toLowerCase()}"><td class="rank">${i+1}</td><td>${r.name}</td><td class="num pts">${fmt(r.points)}</td><td class="num ch">${fmt(r.chests)}</td></tr>`).join('') +
+  `</tbody>`;
+const lbRows = [...document.querySelectorAll('#lb tbody tr')];
+document.getElementById('lbCnt').textContent = `${D.leaderboard.length} players`;
+function filterLB(q) {
+  q = q.trim().toLowerCase();
+  let shown = 0;
+  lbRows.forEach(tr => {
+    const ok = !q || tr.dataset.name.includes(q);
+    tr.classList.toggle('hidden', !ok);
+    if (ok) shown++;
+  });
+  document.getElementById('lbCnt').textContent = q ? `${shown} match(es)` : `${D.leaderboard.length} players`;
+}
+
+// --- per-category table ---
+const cats = ['Common','Citadel','Rare','Epic','Heroic'];
+const maxN = 5;
+let th = '<tr>' + cats.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+let rowsHtml = '';
+for (let r = 0; r < maxN; r++) {
+  rowsHtml += '<tr>' + cats.map(c => {
+    const p = D.cat_top[c][r];
+    return `<td>${p ? `${r+1}. <b>${p.name}</b> <span class="n">(${p.n})</span>` : '—'}</td>`;
+  }).join('') + '</tr>';
+}
+document.getElementById('cattab').innerHTML = `<table class="cat"><thead>${th}</thead><tbody>${rowsHtml}</tbody></table>`;
+
+// --- chest types ---
+const tm = Math.max(...D.types.map(t=>t.n));
+document.getElementById('types').innerHTML = D.types.map(t=>
+  `<div class="row"><span class="name">${t.t}</span><div class="bar"><i style="width:${Math.round(t.n/tm*100)}%"></i></div>
+   <span class="val"><b>${fmt(t.n)}</b></span></div>`).join('');
+
+// --- G levels + unknowns ---
+document.getElementById('gdist').innerHTML = D.g_dist.map(g=>
+  `<div class="gcard"><span class="g">${g.g === 'Unknown' ? 'Unknown (XXX)' : 'G' + g.g}</span><span class="n">${g.n}</span></div>`).join('');
+document.getElementById('unknowns').innerHTML = D.unknowns.map(n=>`<span class="chip">${n}</span>`).join('') ||
+  '<p style="color:var(--gold)">None — everyone reported!</p>';
+</script>
+</body>
+</html>
