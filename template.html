@@ -174,10 +174,10 @@ document.getElementById('wk').textContent = D.last_week;
 // "Last updated Xh ago" — anchored to the data's last timestamp, shown in GMT-6
 (function () {
   const gen = new Date(D.generated + 'T00:00:00Z');
-  const h = Math.max(0, Math.floor((Date.now() - gen.getTime()) / 3600000));
+  const anchor = gen.getTime() + 86400000; // end of the data day
+  const h = Math.max(0, Math.floor((Date.now() - anchor) / 3600000));
   const hh = h < 1 ? 'under 1h' : (h < 24 ? h + 'h' : Math.floor(h / 24) + 'd ' + (h % 24) + 'h');
-  const loc = gen.toLocaleString('en-US', { timeZone: 'America/El_Salvador', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  document.getElementById('upd').textContent = `Last updated ${hh} ago · ${loc} (GMT-6)`;
+  document.getElementById('upd').textContent = `Last updated ${hh} ago · ${D.generated} (GMT-6)`;
 })();
 document.getElementById('cPw').textContent = fmt(D.stats.points);
 document.getElementById('cCw').textContent = fmt(D.stats.chests);
