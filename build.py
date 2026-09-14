@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 """HOM tracker build: HOM.xlsx -> index.html (single source of truth: ~/hom/HOM.xlsx)"""
-import pandas as pd, openpyxl, json, os, sys
+import pandas as pd, openpyxl, json, os, sys, warnings
 from datetime import datetime, timedelta
+
+# openpyxl emits cosmetic warnings for Excel extensions it can't parse (Slicer List,
+# unknown extensions, pivot-cache quirks). Harmless — silence just these so the nightly
+# delivery stays clean; real errors/warnings still surface.
+for _m in (
+    "Slicer List extension is not supported",
+    "Unknown extension is not supported",
+    "Failed to load a conditional formatting rule",
+    r".*invalid dependency definitions",
+):
+    warnings.filterwarnings("ignore", message=_m)
 
 def excel_weeknum(d):
     """Excel WEEKNUM(serial,1): weeks start SUNDAY, week 1 = week containing Jan 1 (matches their ChestData formula)."""
@@ -90,7 +101,7 @@ mweeks = weeks[-6:][::-1]
 wm = v[v["Week"].isin(mweeks)]
 cw_pts = wm[wm["Week"] == last_week].groupby("Clanmate")["Points"].sum()
 mat = []
-for name in sorted(w2_names, key=lambda n: -cw_pts.get(n, 0)):
+for name in sorted(w2_names, key=lambda n: (-cw_pts.get(n, 0), n)):  # (points desc, name asc) — fully deterministic
     rows_w = wm[wm["Clanmate"] == name]
     wdata = []
     for wk in mweeks:
